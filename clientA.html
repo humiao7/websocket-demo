@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clientA</title>
+</head>
+
+<body>
+    <div class="client">
+        <h2 class="title">客户端 A</h2>
+        <div id="message" class="message">
+
+        </div>
+        <div class="send-message">
+            <input id="input" />
+            <button onclick="sendMessage()">发送</button>
+            <button onclick=" closeConnect()">离开</button>
+        </div>
+    </div>
+
+    <script>
+        // 在消息界面输出消息
+        function addMessage(message) {
+            document.getElementById('message').innerHTML += message + "</br>";
+        }
+
+        // 创建 WS 实例并建立连接
+        addMessage("开始连接 ...");
+        let ws = new WebSocket("ws://localhost:8080?username=clientA");
+        ws.onopen = function (evt) {
+            addMessage('连接成功！');
+        };
+
+        // 监听服务器消息
+        ws.onmessage = function (evt) {
+            addMessage(evt.data);
+        };
+
+        // 断开连接时触发
+        ws.onclose = function (evt) {
+            addMessage("连接已断开");
+        };
+
+        // 发送消息
+        function sendMessage() {
+            ws.send('客户端 A :' + document.getElementById('input').value);
+        }
+        // 断开连接
+        function closeConnect() {
+            ws.close();
+        }
+    </script>
+
+    <style>
+        .client {
+            width: 500px;
+        }
+
+        .title {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .message {
+            height: 500px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #000;
+            background: #efefef;
+        }
+
+        .send-message {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .send-message input {
+            width: 60%
+        }
+
+        .send-message button {
+            flex: 1;
+            margin-left: 10px;
+        }
+    </style>
+</body>
+
+</html>
