@@ -17,7 +17,6 @@
 │      .gitignore
 │      clientA.html
 │      clientB.html
-│      list.txt
 │      package-lock.json
 │      package.json
 │      README.md
