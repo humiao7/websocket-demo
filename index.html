@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatRoom</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="chat-room">
+        <div class="title">Websocket 聊天室</div>
+        <div class="chat-content">
+            <div class="online-persons" id="onlineList"></div>
+            <div class="chat-box">
+                <div class="messages" id="message"></div>
+                <div class="write">
+                    <textarea id="input" placeholder="说点什么吧..."></textarea>
+                    <div class="send-button">
+                        <button onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let name = prompt("请输入你的昵称：");
+        const socket = io();
+        socket.emit("join", name); // 新建连接
+
+        // 监听服务器发来的 join 事件时
+        socket.on("join", function (msg) {
+            console.log(msg)
+            document.getElementById('message').innerHTML += "<div class='join-message'><span>" + msg.name + " 进入聊天室</span ></div >";
+            let onlineListHtml = "<div class='online-title'>当前在线<span style='color:red;'> ( " + msg.onlinePerson.length + " )</span></div>";
+            for (let i = 0; i < msg.onlinePerson.length; i++) {
+                onlineListHtml += "<div class='person'><div class='dot'></div>" + msg.onlinePerson[i].name + "</div>"
+            }
+            document.getElementById('onlineList').innerHTML = onlineListHtml;
+            document.getElementById('message').scrollTop = document.getElementById('message').scrollHeight
+        })
+
+        // 监听到服务器发来的 message 事件
+        socket.on("message", function (msg) {
+            // 自己发出的消息
+            if (msg.name === name) {
+                document.getElementById('message').innerHTML += "<div class='my-message'><div class='message-content'>" + msg.message + "</div><span> 我</span></div>"
+            } else {
+                document.getElementById('message').innerHTML += "<div class='message-item'><div class='user'>" + msg.name + "</div><div class='message-content'>" + msg.message + "</div></div>"
+            }
+            document.getElementById('message').scrollTop = document.getElementById('message').scrollHeight
+        })
+
+        // 监听服务器发来的 exit 事件
+        socket.on("exit", function (msg) {
+            console.log(msg)
+            document.getElementById('message').innerHTML += "<div class='join-message'><span>" + msg.name + " 离开聊天室</span ></div >";
+            let onlineListHtml = "<div class='online-title'>当前在线<span style='color:red;'> ( " + msg.onlinePerson.length + " )</span></div>";
+            for (let i = 0; i < msg.onlinePerson.length; i++) {
+                onlineListHtml += "<div class='person'><div class='dot'></div>" + msg.onlinePerson[i].name + "</div>"
+            }
+            document.getElementById('onlineList').innerHTML = onlineListHtml;
+            document.getElementById('message').scrollTop = document.getElementById('message').scrollHeight
+        })
+
+        // 向服务器发送消息
+        function sendMessage() {
+            socket.emit("message", { name: name, message: document.getElementById('input').value }) //将消息发送给服务器
+            document.getElementById("input").value = "";
+        }
+
+    </script>
+    <style>
+        body {
+            background-color: #f8f8f8;
+            font-weight: 400;
+            background-size: cover;
+            background-repeat: none;
+            background-color: #0099cc;
+        }
+
+        .chat-room {
+            position: relative;
+            left: 50%;
+            width: 80%;
+            height: 600px;
+            margin: 70px 0 0;
+            -webkit-transform: translate(-50%, 0);
+            transform: translate(-50%, 0);
+            background: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .title {
+            height: 50px;
+            font-size: 16px;
+            font-weight: 400;
+            text-align: center;
+            line-height: 50px;
+            background-color: #f5f6f7;
+        }
+
+        .chat-content {
+            width: 100%;
+            height: 550px;
+            display: inline-flex;
+        }
+
+        .online-persons {
+            flex: 1;
+            border-right: 1px solid #eee;
+            height: 100%;
+            background: #ffffff;
+        }
+
+        .online-persons .online-title {
+            padding: 10px 15px 0;
+            line-height: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #3b8bff;
+        }
+
+        .online-persons .person {
+            padding: 10px 15px 0;
+            line-height: 20px;
+        }
+
+        .online-persons .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+            background: #5bbe6d;
+            border-radius: 5px;
+        }
+
+        .chat-box {
+            flex: 4;
+            height: 100%;
+        }
+
+        .chat-box .messages {
+            width: 100%;
+            height: 335px;
+            padding: 15px 0 0;
+            overflow: auto;
+            background: #ebedf6;
+        }
+
+        .chat-box .messages .message-item {
+            width: calc(100% - 30px);
+            margin: 0 0 15px;
+            padding: 0 15px;
+            display: inline-flex;
+            align-items: flex-start;
+        }
+
+        .chat-box .messages .message-item .user {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .chat-box .messages .message-item .message-content {
+            padding: 10px;
+            margin-left: 10px;
+            color: #000;
+            background-color: #fff;
+            border-radius: 0 10px 10px 10px;
+        }
+
+        .chat-box .messages .join-message {
+            margin: 0 0 15px;
+            font-size: 12px;
+            text-align: center;
+            color: #aaa;
+        }
+
+        .chat-box .messages .join-message span {
+            padding: 2px 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .chat-box .messages .my-message {
+            width: calc(100% - 30px);
+            margin: 0 0 15px;
+            padding: 0 15px;
+            display: inline-flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        .chat-box .messages .my-message .message-content {
+            padding: 10px;
+            margin-right: 10px;
+            color: #fff;
+            background-color: #00b0ff;
+            border-radius: 10px 0 10px 10px;
+        }
+
+        .chat-box .messages .my-message span {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .chat-box .write {
+            height: 179px;
+            width: calc(100% - 20px);
+            padding: 10px;
+            border-top: 1px solid #e6e6e6;
+            background-color: #fff;
+        }
+
+        .chat-box textarea {
+            width: calc(100% - 20px);
+            height: calc(100% - 60px);
+            padding: 10px;
+            margin: 0;
+            border: 0;
+            border-radius: 5px;
+            resize: none;
+            outline: none;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .chat-box .send-button {
+            height: 40px;
+            width: 100%;
+            text-align: right;
+            line-height: 40px;
+        }
+
+        .chat-box .send-button button {
+            padding: 5px 40px;
+            color: #fff;
+            background: #3889ff;
+            border: none;
+            border-radius: 2px;
+            outline: none;
+        }
+    </style>
+</body>
+
+</html>
